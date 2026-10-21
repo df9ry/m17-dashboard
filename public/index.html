@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <title>M17 Transcoder – SysInfo</title>
+  <style>
+    body { font-family: system-ui, sans-serif; background: #111; color: #eee; padding: 2rem; }
+    .sysinfo { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+    .card { background: #1e1e1e; border-radius: 8px; padding: 1.2rem 1.8rem; min-width: 150px; }
+    .label { font-size: .75rem; text-transform: uppercase; letter-spacing: .06em; color: #888; }
+    .value { font-size: 2rem; font-weight: 700; color: #4ade80; margin-top: .25rem; font-variant-numeric: tabular-nums; }
+    .value.warn { color: #facc15; }
+    .value.crit { color: #f87171; }
+  </style>
+</head>
+<body>
+  <h1>System Info</h1>
+  <div class="sysinfo">
+    <div class="card"><div class="label">CPU-Last</div><div class="value" id="cpu">–</div></div>
+    <div class="card"><div class="label">Temperatur</div><div class="value" id="temp">–</div></div>
+    <div class="card"><div class="label">Cores</div><div class="value" id="cores">–</div></div>
+    <div class="card"><div class="label">Uptime</div><div class="value" id="uptime">–</div></div>
+  </div>
+
+  <script type="module">
+    const $ = (id) => document.getElementById(id);
+
+    function formatUptime(sec) {
+      const d = Math.floor(sec / 86400);
+      const h = Math.floor((sec % 86400) / 3600);
+      const m = Math.floor((sec % 3600) / 60);
+      return d > 0 ? `${d}d ${h}h` : h > 0 ? `${h}h ${m}m` : `${m}m`;
+    }
+
+    async function update() {
+      try {
+        const res = await fetch('/api/systeminfo');
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const d = await res.json();
+
+        $('cpu').textContent = d.cpuPercent.toFixed(1) + ' %';
+        $('cpu').className = 'value' + (d.cpuPercent >= 85 ? ' crit' : d.cpuPercent >= 60 ? ' warn' : '');
+        $('cores').textContent = d.cpuCores;
+        $('uptime').textContent = formatUptime(d.uptimeSeconds);
+
+        const t = $('temp');
+        if (d.cpuTemp === null) {
+          t.textContent = 'n/a';
+          t.className = 'value';
+        } else {
+          t.textContent = d.cpuTemp.toFixed(1) + ' °C';
+          t.className = 'value' + (d.cpuTemp >= 70 ? ' crit' : d.cpuTemp >= 55 ? ' warn' : '');
+        }
+      } catch (e) {
+        console.error('SysInfo-Abruf fehlgeschlagen:', e);
+      }
+    }
+
+    update();
+    setInterval(update, 3000);
+  </script>
+</body>
+</html>
