@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
+    "deploy": "npm run build && sudo rsync -a --delete dist public package.json /var/www/m17-dashboard/ && sudo chown -R www-data:www-data /var/www/m17-dashboard && sudo systemctl restart m17-dashboard",
     "start": "node dist/server.js"
   },
   "dependencies": {
