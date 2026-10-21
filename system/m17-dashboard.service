@@ -1,0 +1,17 @@
+[Unit]
+Description=M17 Transcoder Dashboard
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/m17-dashboard
+ExecStart=/usr/bin/node /var/www/m17-dashboard/dist/server.js
+Environment=PORT=8080
+Environment=NODE_ENV=production
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
